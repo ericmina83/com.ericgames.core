@@ -7,18 +7,20 @@ namespace EricGames.Core.Characters
     {
         private void InitStateMove()
         {
-            stateMachine.ReigsterStateDelegate(State.MOVE, StateDelegateType.UPDATE, MoveStateUpdate);
+            var moveState = stateMachine.GetSubState(State.MOVE);
 
-            stateMachine.RegisterTransition(State.MOVE, State.DODGE, 0.2f,
+            moveState.ReigsterStateDelegate(State.MOVE, StateDelegateType.UPDATE, MoveStateUpdate);
+
+            moveState.RegisterTransition(State.MOVE, State.DODGE, 0.2f,
                 new TriggerType[] { TriggerType.DODGE },
                 null);
-            stateMachine.RegisterTransition(State.MOVE, State.ATTACK, 0.2f,
+            moveState.RegisterTransition(State.MOVE, State.ATTACK, 0.2f,
                 new TriggerType[] { TriggerType.ATTACK },
                 null);
-            stateMachine.RegisterTransition(State.MOVE, State.JUMP, 0.4f,
+            moveState.RegisterTransition(State.MOVE, State.JUMP, 0.4f,
                 new TriggerType[] { TriggerType.JUMP },
                 null);
-            stateMachine.RegisterTransition(State.MOVE, State.FALL, 0.0f,
+            moveState.RegisterTransition(State.MOVE, State.FALL, 0.0f,
                 null,
                 () => landingState == LandingState.GROUNDED && 0 < speedY);
         }
@@ -27,7 +29,7 @@ namespace EricGames.Core.Characters
 
         public void Move(Vector2 input)
         {
-            targMoveInput = input;
+            moveInput = input;
         }
 
         #endregion
@@ -36,10 +38,19 @@ namespace EricGames.Core.Characters
 
         private void MoveStateUpdate()
         {
-            CheckRotation(targMoveInput.x);
+            ApplyRotation();
 
-            targMoveInput = Vector2.zero;
+            if (!animator.applyRootMotion)
+            {
+                HandleMove(moveInput);
+            }
         }
+
+        #endregion
+
+        #region Abstract Function
+
+        public abstract void HandleMove(Vector2 input);
 
         #endregion
     }

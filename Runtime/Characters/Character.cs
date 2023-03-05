@@ -8,8 +8,7 @@ namespace EricGames.Core.Characters
 {
     [RequireComponent(typeof(AnimatorTriggerHandler))]
     [RequireComponent(typeof(Animator))]
-    [RequireComponent(typeof(Rigidbody2D))]
-    public partial class Character : MonoBehaviour
+    public abstract partial class Character : MonoBehaviour
     {
         public enum TriggerType
         {
@@ -39,9 +38,6 @@ namespace EricGames.Core.Characters
 
         #region Serialize Field
 
-        private const float INPUT_DIR_CHANGED_THRES = 0.12f;
-        [SerializeField] private LayerMask groundMask; // 
-        [SerializeField] private bool facingRight = true;
         [SerializeField] private float jumpForce = 7.0f; // decide how height when jumping
         [SerializeField] private float blockingDuration = 0.2f;
         [SerializeField] private Body[] bodies = null;
@@ -92,58 +88,37 @@ namespace EricGames.Core.Characters
 
         protected AnimatorTriggerHandler animatorTriggerHandler;
         protected Animator animator;
-        protected Rigidbody2D rb;
 
         private StateMachine<State, TriggerType> stateMachine;
 
         [SerializeField]
-        private StateMachineGraph stateMachineGraph;
-
+        protected float moveSpeed = 1.0f;
 
         private float blockingTime = 0.0f;
 
         #endregion
 
-        private enum LandingState
+        protected enum LandingState
         {
             GROUNDED,
             JUMPING,
             FALLING,
         }
 
-        private LandingState landingState;
-
-        protected Vector3 forward
-        {
-            get
-            {
-                return transform.right * (flip ? -1 : 1);
-            }
-        }
-
+        protected LandingState landingState;
         public Team team;
-        private bool flip;
-        bool canDoNext = false;
-        bool doubleJump = true;
         public bool blocking = false;
         //public bool awaking = false;
         public bool unstopable = false;
+
+        // private float speedX => Mathf.Abs(moveInput.x);
+        abstract protected float speedY { get; }
 
         protected virtual void Awake()
         {
             animatorTriggerHandler = GetComponent<AnimatorTriggerHandler>();
             animator = GetComponent<Animator>();
             bodies = GetComponentsInChildren<Body>();
-            rb = GetComponent<Rigidbody2D>();
-        }
-
-        private float speedX => Mathf.Abs(targMoveInput.x);
-        private float speedY => rb.velocity.y;
-
-        public virtual void Start()
-        {
-            flip = !facingRight;
-            damage = new Damage(this);
 
             moveStateTagHash = Animator.StringToHash(moveStateTag);
             jumpStateTagHash = Animator.StringToHash(jumpStateTag);
@@ -157,6 +132,12 @@ namespace EricGames.Core.Characters
             dodgeParameterHash = Animator.StringToHash(dodgeParameter);
             blockParameterHash = Animator.StringToHash(blockParameter);
             attackParameterHash = Animator.StringToHash(attackParameter);
+        }
+
+
+        public virtual void Start()
+        {
+            damage = new Damage(this);
 
             stateMachine = new StateMachine<State, TriggerType>(State.MOVE);
 
@@ -170,29 +151,7 @@ namespace EricGames.Core.Characters
 
         void FixedUpdate()
         {
-            CheckIsGrounded();
-        }
-
-        void Update()
-        {
-            animator.SetBool("isGrounded", landingState == LandingState.GROUNDED);
-            animator.SetBool("unstopable", unstopable);
-            animator.SetBool("Can Jump", doubleJump);
-            animator.SetFloat("speedX", speedX, 0.02f, Time.deltaTime); // now horizontal input value
-            animator.SetFloat("speedY", speedY); // curent vertical speed
-
-            stateMachine?.Tick(Time.deltaTime);
-        }
-
-        private void CheckIsGrounded()
-        {
-            // check ground
-            RaycastHit2D hit = Physics2D.Raycast(
-                new Vector2(transform.position.x, transform.position.y) + Vector2.up * 0.5f,
-                Vector2.down, 0.7f,
-                groundMask);
-
-            if (hit.collider != null)
+            if (CheckIsGrounded())
             {
                 landingState = LandingState.GROUNDED;
             }
@@ -205,24 +164,22 @@ namespace EricGames.Core.Characters
                 landingState = LandingState.JUMPING;
             }
 
-            // Vector3 newPos = transform.position;
+            animator.SetFloat("InputX", moveInput.x, 0.02f, Time.deltaTime); // now horizontal input value
+            animator.SetFloat("InputY", moveInput.y, 0.02f, Time.deltaTime); // curent vertical speed
 
-            // speedY -= 9.8f * Time.deltaTime;
-            // newPos.y += speedY * Time.deltaTime;
-
-            // if (isGrounded)
-            // {
-            //     if (newPos.y < hit.point.y)
-            //     {
-            //         speedY = 0.0f;
-            //         newPos.y = hit.point.y;
-            //     }
-            // }
-
-            // newPos.z = 0.0f;
-
-            // transform.position = newPos;
+            animator.SetFloat("SpeedY", speedY);
         }
+
+        void Update()
+        {
+            OnUpdate();
+
+            stateMachine?.Tick(Time.deltaTime);
+        }
+
+        protected abstract void OnUpdate();
+
+        protected abstract bool CheckIsGrounded();
 
         #region State HITTED
 
@@ -272,22 +229,28 @@ namespace EricGames.Core.Characters
 
         #endregion
 
-        public Vector2 targMoveInput;
+        public Vector3 lookInput;
+
+        public Vector2 moveInput;
+
+        private bool canRotate = false;
 
         [SerializeField] private GameObject obstacle;
 
         public bool untouchable = false; // can't touch, will close body collider
 
 
-        // check current rotation is same as input
-        protected void CheckRotation(float movingX)
+        private void ApplyRotation()
         {
-            if ((movingX > INPUT_DIR_CHANGED_THRES && facingRight == false) || // looking right but wanna look left
-                (movingX < -INPUT_DIR_CHANGED_THRES && facingRight == true)) // looking left but wanna look right
+            var magnitude = moveInput.magnitude;
+
+            if (!Mathf.Approximately(magnitude, 0.0f))
             {
-                transform.Rotate(Vector3.up * 180.0f);
-                facingRight = !facingRight;
+                transform.rotation = CheckRotation(moveInput);
             }
         }
+
+        // check current rotation is same as input
+        public abstract Quaternion CheckRotation(Vector2 input);
     }
 }

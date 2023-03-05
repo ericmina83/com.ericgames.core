@@ -1,4 +1,5 @@
 using EricGames.Core.StateMachine;
+using UnityEngine;
 
 namespace EricGames.Core.Characters
 {
@@ -6,18 +7,20 @@ namespace EricGames.Core.Characters
     {
         private void InitStateFall()
         {
-            stateMachine.ReigsterStateDelegate(State.FALL, StateDelegateType.UPDATE, FallStateUpdate);
+            var fallState = stateMachine.GetSubState(State.FALL);
 
-            stateMachine.RegisterTransition(State.FALL, State.MOVE, 0.0f,
+            fallState.ReigsterStateDelegate(State.FALL, StateDelegateType.UPDATE, FallStateUpdate);
+
+            fallState.RegisterTransition(State.FALL, State.MOVE, 0.0f,
                 null,
                 () => landingState == LandingState.GROUNDED);
-            stateMachine.RegisterTransition(State.FALL, State.DODGE, 0.0f,
+            fallState.RegisterTransition(State.FALL, State.DODGE, 0.0f,
                 new TriggerType[] { TriggerType.DODGE },
                 null);
-            stateMachine.RegisterTransition(State.FALL, State.ATTACK, 0.0f,
+            fallState.RegisterTransition(State.FALL, State.ATTACK, 0.0f,
                 new TriggerType[] { TriggerType.ATTACK },
                 null);
-            stateMachine.RegisterTransition(State.FALL, State.JUMP, 0.0f,
+            fallState.RegisterTransition(State.FALL, State.JUMP, 0.0f,
                 new TriggerType[] { TriggerType.JUMP },
                 () => landingState == LandingState.GROUNDED ? true : doubleJump);
         }
@@ -26,8 +29,16 @@ namespace EricGames.Core.Characters
 
         private void FallStateUpdate()
         {
-            CheckRotation(targMoveInput.x);
+            ApplyRotation();
+
+            HandleFall(moveInput, lookInput);
         }
+
+        #endregion
+
+        #region Abstract Functions
+
+        protected abstract void HandleFall(Vector2 moveInput, Vector3 lookInput);
 
         #endregion
     }

@@ -4,80 +4,11 @@ using EricGames.Core.Components;
 
 namespace EricGames.Core.StateMachine
 {
-    public enum StateDelegateType
-    {
-        START,
-        UPDATE,
-        END
-    }
-
     public class StateMachine<StateType, TriggerType>
-    where StateType : Enum
-    where TriggerType : Enum
+        where StateType : Enum
+        where TriggerType : Enum
     {
-        public delegate bool ConditionDelegate();
-
-        private TriggerHandler<TriggerType> triggerHandler = new TriggerHandler<TriggerType>();
-
-        private class Transition
-        {
-            public StateType targetState;
-            private ConditionDelegate conditionDelegate;
-            private TriggerType[] triggerTypes;
-            private TriggerHandler<TriggerType> triggerHandler;
-            private float exitTime;
-
-            public Transition(StateType targetState, ConditionDelegate conditionDelegate, float exitTime, TriggerType[] triggerTypes, TriggerHandler<TriggerType> triggerHandler)
-            {
-                this.targetState = targetState;
-                this.conditionDelegate = conditionDelegate;
-                this.triggerTypes = triggerTypes;
-                this.triggerHandler = triggerHandler;
-            }
-
-            public bool CheckCondition(float deltaTime)
-            {
-                var timeout = exitTime <= 0;
-                exitTime -= deltaTime;
-
-                if (!timeout)
-                    return false;
-
-                var result = true;
-
-                if (conditionDelegate != null)
-                    result &= conditionDelegate.Invoke();
-
-                if (triggerTypes != null)
-                {
-                    foreach (var triggerType in triggerTypes)
-                    {
-                        result &= triggerHandler.GetTriggerValue(triggerType);
-                    }
-
-                    if (result)
-                    {
-                        foreach (var triggerType in triggerTypes)
-                        {
-                            triggerHandler.ResetTrigger(triggerType);
-                        }
-                    }
-                }
-
-                return result;
-            }
-        }
-
-        public StateMachine(StateType startState)
-        {
-            this.currState = this.nextState = startState;
-            stateMachineStart = true;
-
-            foreach (StateType state in Enum.GetValues(typeof(StateType)))
-            {
-                stateDelegateMaps.Add(state, new StateDelegateMap(state));
-            }
-        }
+        internal TriggerHandler<TriggerType> triggerHandler = new TriggerHandler<TriggerType>();
 
         private StateType currState;
         public StateType CurrState => currState;
@@ -88,30 +19,24 @@ namespace EricGames.Core.StateMachine
         private bool stateChanged = false;
         private bool stateMachineStart = false;
 
-        public delegate void StateDelegate();
+        private Dictionary<StateType, SubState<StateType, TriggerType>> subStateMaps
+            = new Dictionary<StateType, SubState<StateType, TriggerType>>();
 
-        private class StateDelegateMap
+        public StateMachine(StateType defaultStateType)
         {
-            public Dictionary<StateDelegateType, StateDelegate> stateDelegates = new Dictionary<StateDelegateType, StateDelegate>();
-            public List<Transition> transitions = new List<Transition>();
+            this.currState = this.nextState = defaultStateType;
+            stateMachineStart = true;
 
-            private StateType state;
-
-            public StateDelegateMap(StateType state)
+            foreach (StateType state in Enum.GetValues(typeof(StateType)))
             {
-                this.state = state;
-            }
-
-            public void InvokeTargetDelegate(StateDelegateType stateDelegateType)
-            {
-                if (stateDelegates.TryGetValue(stateDelegateType, out var stateDelegate))
-                {
-                    stateDelegate.Invoke();
-                }
+                subStateMaps.Add(state, new SubState<StateType, TriggerType>(this));
             }
         }
 
-        private Dictionary<StateType, StateDelegateMap> stateDelegateMaps = new Dictionary<StateType, StateDelegateMap>();
+        public SubState<StateType, TriggerType> GetSubState(StateType stateType)
+        {
+            return subStateMaps[stateType];
+        }
 
         public void Tick(float deltaTime)
         {
@@ -119,14 +44,14 @@ namespace EricGames.Core.StateMachine
 
             if (stateMachineStart)
             {
-                stateDelegateMaps[currState].InvokeTargetDelegate(StateDelegateType.START);
+                subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.START);
                 stateChanged = stateMachineStart = false;
             }
             else
             {
                 if (!stateChanged)
                 {
-                    foreach (var transition in stateDelegateMaps[currState].transitions)
+                    foreach (var transition in subStateMaps[currState].transitions)
                     {
                         if (transition.CheckCondition(deltaTime))
                         {
@@ -139,33 +64,44 @@ namespace EricGames.Core.StateMachine
 
                 if (stateChanged)
                 {
-                    stateDelegateMaps[currState].InvokeTargetDelegate(StateDelegateType.END);
+                    subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.END);
 
                     currState = nextState;
 
-                    stateDelegateMaps[currState].InvokeTargetDelegate(StateDelegateType.START);
+                    subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.START);
 
                     stateChanged = false;
                 }
             }
 
-            stateDelegateMaps[currState].InvokeTargetDelegate(StateDelegateType.UPDATE);
-        }
-
-        public void ReigsterStateDelegate(StateType state, StateDelegateType delegateType, StateDelegate stateDelegate)
-        {
-            stateDelegateMaps[state].stateDelegates.Add(delegateType, stateDelegate);
-        }
-
-        public void RegisterTransition(StateType sourceState, StateType targetState, float exitTime, TriggerType[] triggerTypes, ConditionDelegate conditionDelegate)
-        {
-            stateDelegateMaps[sourceState].transitions
-                .Add(new Transition(targetState, conditionDelegate, exitTime, triggerTypes, triggerHandler));
+            subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.UPDATE);
         }
 
         public void SetTrigger(TriggerType triggerType, float time)
         {
             triggerHandler.SetTrigger(triggerType, time);
+        }
+
+        public StateMachine<ChildrenStateType, TriggerType> ChangeStateToSubStateMachine<ChildrenStateType>(
+            StateType whichStateTypeToChange, ChildrenStateType defaultStateType)
+            where ChildrenStateType : Enum
+        {
+            SubStateMachine<StateType, ChildrenStateType, TriggerType> subStateMachine;
+            var currentState = subStateMaps[whichStateTypeToChange];
+
+            if (currentState is SubStateMachine<StateType, ChildrenStateType, TriggerType>)
+            {
+                subStateMachine
+                    = currentState as SubStateMachine<StateType, ChildrenStateType, TriggerType>;
+            }
+            else
+            {
+                subStateMaps[whichStateTypeToChange]
+                    = subStateMachine
+                    = new(currentState, defaultStateType);
+            }
+
+            return subStateMachine.subStateMachine;
         }
     }
 }

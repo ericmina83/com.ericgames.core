@@ -5,20 +5,33 @@ namespace EricGames.Core.Characters
 {
     public partial class Character
     {
+        private enum AttackState
+        {
+            PREPARE,
+            ATTACKING,
+            RESTORE
+        }
+
+        private bool canDoNext = false;
+        private bool preAttack = false;
+
         private void InitStateAttack()
         {
-            stateMachine.ReigsterStateDelegate(State.ATTACK, StateDelegateType.START, AttackStateStart);
+            var attackState = stateMachine.GetSubState(State.ATTACK);
 
-            stateMachine.RegisterTransition(State.ATTACK, State.ATTACK, 0f,
+            attackState.ReigsterStateDelegate(State.ATTACK, StateDelegateType.START, AttackStateStart);
+            attackState.ReigsterStateDelegate(State.ATTACK, StateDelegateType.UPDATE, AttackStateUpdate);
+
+            attackState.RegisterTransition(State.ATTACK, State.ATTACK, 0f,
                 new TriggerType[] { TriggerType.ATTACK },
                 () => canDoNext);
-            stateMachine.RegisterTransition(State.ATTACK, State.MOVE, 0.0f,
+            attackState.RegisterTransition(State.ATTACK, State.MOVE, 0.0f,
                 null,
                 () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.GROUNDED);
-            stateMachine.RegisterTransition(State.ATTACK, State.FALL, 0.0f,
+            attackState.RegisterTransition(State.ATTACK, State.FALL, 0.0f,
                 null,
                 () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.FALLING);
-            stateMachine.RegisterTransition(State.ATTACK, State.JUMP, 0.0f,
+            attackState.RegisterTransition(State.ATTACK, State.JUMP, 0.0f,
                 null,
                 () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.JUMPING);
         }
@@ -33,8 +46,6 @@ namespace EricGames.Core.Characters
 
         #endregion
 
-        #region State Delegate
-
         public void CanDoNext()
         {
             canDoNext = true;
@@ -45,10 +56,41 @@ namespace EricGames.Core.Characters
             canDoNext = false;
         }
 
+        public void PreAttackStart()
+        {
+            preAttack = true;
+        }
+
+        public void PreAttackEnd()
+        {
+            preAttack = false;
+        }
+
+        #region State Delegate
+
         private void AttackStateStart()
         {
             canDoNext = false;
+            preAttack = false;
         }
+
+        public void AttackStateUpdate()
+        {
+            if (animator.IsInTransition(0))
+            {
+                ApplyRotation();
+            }
+            else
+            {
+                HandleAttack();
+            }
+        }
+
+        #endregion
+
+        #region Abastract Function
+
+        public abstract void HandleAttack();
 
         #endregion
     }
