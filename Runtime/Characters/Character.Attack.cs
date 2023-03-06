@@ -27,8 +27,7 @@ namespace EricGames.Core.Characters
                 () => attackSubState == AttackState.RESTORING
                     && triggerHandler.GetTriggerValue(TriggerType.ATTACK));
             attackState.RegisterTransition(State.MOVEMENT, 0f,
-                () => attackSubState == AttackState.END
-                    || attackSubState == AttackState.WAIT);
+                () => attackSubState == AttackState.END);
         }
 
         #region Trigger Function
