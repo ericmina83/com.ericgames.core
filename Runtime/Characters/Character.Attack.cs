@@ -19,19 +19,19 @@ namespace EricGames.Core.Characters
         {
             var attackState = stateMachine.GetSubState(State.ATTACK);
 
-            attackState.ReigsterStateDelegate(State.ATTACK, StateDelegateType.START, AttackStateStart);
-            attackState.ReigsterStateDelegate(State.ATTACK, StateDelegateType.UPDATE, AttackStateUpdate);
+            attackState.ReigsterStateDelegate(StateDelegateType.START, AttackStateStart);
+            attackState.ReigsterStateDelegate(StateDelegateType.UPDATE, AttackStateUpdate);
 
-            attackState.RegisterTransition(State.ATTACK, State.ATTACK, 0f,
+            attackState.RegisterTransition(State.ATTACK, 0f,
                 new TriggerType[] { TriggerType.ATTACK },
                 () => canDoNext);
-            attackState.RegisterTransition(State.ATTACK, State.MOVE, 0.0f,
+            attackState.RegisterTransition(State.MOVE, 0.0f,
                 null,
                 () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.GROUNDED);
-            attackState.RegisterTransition(State.ATTACK, State.FALL, 0.0f,
+            attackState.RegisterTransition(State.FALL, 0.0f,
                 null,
                 () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.FALLING);
-            attackState.RegisterTransition(State.ATTACK, State.JUMP, 0.0f,
+            attackState.RegisterTransition(State.JUMP, 0.0f,
                 null,
                 () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.JUMPING);
         }

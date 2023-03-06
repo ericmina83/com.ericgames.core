@@ -11,22 +11,22 @@ namespace EricGames.Core.Characters
         {
             var jumpState = stateMachine.GetSubState(State.JUMP);
 
-            jumpState.ReigsterStateDelegate(State.JUMP, StateDelegateType.START, JumpStateStart);
-            jumpState.ReigsterStateDelegate(State.JUMP, StateDelegateType.UPDATE, JumpStateUpdate);
+            jumpState.ReigsterStateDelegate(StateDelegateType.START, JumpStateStart);
+            jumpState.ReigsterStateDelegate(StateDelegateType.UPDATE, JumpStateUpdate);
 
-            jumpState.RegisterTransition(State.JUMP, State.JUMP, 0.0f,
+            jumpState.RegisterTransition(State.JUMP, 0.0f,
                 new TriggerType[] { TriggerType.JUMP },
                 () => landingState == LandingState.GROUNDED ? true : doubleJump);
-            jumpState.RegisterTransition(State.JUMP, State.FALL, 0.0f,
+            jumpState.RegisterTransition(State.FALL, 0.0f,
                 null,
                 () => landingState != LandingState.GROUNDED && speedY < 0);
-            jumpState.RegisterTransition(State.JUMP, State.MOVE, 0.0f,
+            jumpState.RegisterTransition(State.MOVE, 0.0f,
                 null,
                 () => landingState == LandingState.GROUNDED);
-            jumpState.RegisterTransition(State.JUMP, State.DODGE, 0.0f,
+            jumpState.RegisterTransition(State.DODGE, 0.0f,
                 new TriggerType[] { TriggerType.DODGE },
                 null);
-            jumpState.RegisterTransition(State.JUMP, State.ATTACK, 0.0f,
+            jumpState.RegisterTransition(State.ATTACK, 0.0f,
                 new TriggerType[] { TriggerType.ATTACK },
                 null);
         }

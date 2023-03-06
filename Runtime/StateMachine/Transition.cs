@@ -12,10 +12,11 @@ namespace EricGames.Core.StateMachine
     {
 
         public StateType targetState;
-        private ConditionDelegate conditionDelegate;
+        internal ConditionDelegate conditionDelegate;
         private TriggerType[] triggerTypes;
         private float exitTime;
         private StateMachine<StateType, TriggerType> stateMachine;
+        public bool exitTransition = false;
 
         public Transition(
             StateType targetState,
@@ -25,6 +26,18 @@ namespace EricGames.Core.StateMachine
             StateMachine<StateType, TriggerType> stateMachine)
         {
             this.targetState = targetState;
+            this.conditionDelegate = conditionDelegate;
+            this.triggerTypes = triggerTypes;
+            this.stateMachine = stateMachine;
+        }
+
+        public Transition(
+            ConditionDelegate conditionDelegate,
+            float exitTime,
+            TriggerType[] triggerTypes,
+            StateMachine<StateType, TriggerType> stateMachine)
+        {
+            this.exitTransition = true;
             this.conditionDelegate = conditionDelegate;
             this.triggerTypes = triggerTypes;
             this.stateMachine = stateMachine;

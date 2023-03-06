@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using EricGames.Core.Components;
+using UnityEngine;
 
 namespace EricGames.Core.StateMachine
 {
@@ -11,6 +10,7 @@ namespace EricGames.Core.StateMachine
     where TriggerType : Enum
     {
         internal StateMachine<StateType, TriggerType> subStateMachine;
+        override internal bool Stay => subStateMachine.stateMachineStop;
 
         public SubStateMachine(SubState<ParentStateType, TriggerType> state, StateType defaultStateType) : base(state.stateMachine)
         {
@@ -18,16 +18,23 @@ namespace EricGames.Core.StateMachine
             stateDelegates = state.stateDelegates;
 
             subStateMachine = new StateMachine<StateType, TriggerType>(defaultStateType);
+
+            stateDelegates[StateDelegateType.UPDATE] = () => subStateMachine.Tick(Time.deltaTime);
         }
 
-        public override void ReigsterStateDelegate(ParentStateType state, StateDelegateType delegateType, StateDelegate stateDelegate)
+        public override void ReigsterStateDelegate(StateDelegateType delegateType, StateDelegate stateDelegate)
         {
             if (delegateType == StateDelegateType.UPDATE)
             {
                 throw new Exception("SubStateMachine can't Register DelegateType - UPDATE");
             }
 
-            base.ReigsterStateDelegate(state, delegateType, stateDelegate);
+            base.ReigsterStateDelegate(delegateType, stateDelegate);
+        }
+
+        public override void RegisterExitTransition(float exitTime, TriggerType[] triggerTypes, ConditionDelegate conditionDelegate)
+        {
+            base.RegisterExitTransition(exitTime, triggerTypes, conditionDelegate);
         }
     }
 }

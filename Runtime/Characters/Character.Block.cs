@@ -9,11 +9,11 @@ namespace EricGames.Core.Characters
         {
             var blockState = stateMachine.GetSubState(State.BLOCK);
 
-            blockState.ReigsterStateDelegate(State.BLOCK, StateDelegateType.START, BlockStateStart);
-            blockState.ReigsterStateDelegate(State.BLOCK, StateDelegateType.UPDATE, BlockStateUpdate);
-            blockState.ReigsterStateDelegate(State.BLOCK, StateDelegateType.END, BlockStateEnd);
+            blockState.ReigsterStateDelegate(StateDelegateType.START, BlockStateStart);
+            blockState.ReigsterStateDelegate(StateDelegateType.UPDATE, BlockStateUpdate);
+            blockState.ReigsterStateDelegate(StateDelegateType.END, BlockStateEnd);
 
-            blockState.RegisterTransition(State.BLOCK, State.MOVE, 0.0f,
+            blockState.RegisterTransition(State.MOVE, 0.0f,
                 null,
                 () => !blocking);
         }

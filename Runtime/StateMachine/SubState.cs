@@ -20,6 +20,7 @@ namespace EricGames.Core.StateMachine
         internal StateMachine<StateType, TriggerType> stateMachine;
         public Dictionary<StateDelegateType, StateDelegate> stateDelegates = new Dictionary<StateDelegateType, StateDelegate>();
         public List<Transition<StateType, TriggerType>> transitions = new List<Transition<StateType, TriggerType>>();
+        virtual internal bool Stay => false;
 
         public SubState(StateMachine<StateType, TriggerType> stateMachine)
         {
@@ -34,8 +35,7 @@ namespace EricGames.Core.StateMachine
             }
         }
 
-        public void RegisterTransition(
-            StateType sourceState,
+        virtual public void RegisterTransition(
             StateType targetState,
             float exitTime,
             TriggerType[] triggerTypes,
@@ -50,7 +50,21 @@ namespace EricGames.Core.StateMachine
                     stateMachine));
         }
 
-        public virtual void ReigsterStateDelegate(StateType state, StateDelegateType delegateType, StateDelegate stateDelegate)
+        virtual public void RegisterExitTransition(
+            float exitTime,
+            TriggerType[] triggerTypes,
+            ConditionDelegate conditionDelegate)
+        {
+            transitions
+                .Add(new Transition<StateType, TriggerType>(
+                    conditionDelegate,
+                    exitTime,
+                    triggerTypes,
+                    stateMachine));
+        }
+
+        public virtual void ReigsterStateDelegate(
+            StateDelegateType delegateType, StateDelegate stateDelegate)
         {
             stateDelegates.Add(delegateType, stateDelegate);
         }

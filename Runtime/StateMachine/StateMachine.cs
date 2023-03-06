@@ -8,24 +8,28 @@ namespace EricGames.Core.StateMachine
         where StateType : Enum
         where TriggerType : Enum
     {
+        private List<Transition<StateType, TriggerType>> startTransitions = new List<Transition<StateType, TriggerType>>();
         internal TriggerHandler<TriggerType> triggerHandler = new TriggerHandler<TriggerType>();
 
-        private StateType currState;
-        public StateType CurrState => currState;
+        private StateType defaultState;
+        private StateType currStateType;
+        private StateType nextStateType;
 
-        private StateType nextState;
-        public StateType NextState => nextState;
+        public StateType CurrState => currStateType;
+        public StateType NextState => nextStateType;
 
         private bool stateChanged = false;
-        private bool stateMachineStart = false;
+        internal bool stateMachineStop = false;
+        private bool exit = false;
+
 
         private Dictionary<StateType, SubState<StateType, TriggerType>> subStateMaps
             = new Dictionary<StateType, SubState<StateType, TriggerType>>();
 
         public StateMachine(StateType defaultStateType)
         {
-            this.currState = this.nextState = defaultStateType;
-            stateMachineStart = true;
+            defaultState = defaultStateType;
+            stateMachineStop = true;
 
             foreach (StateType state in Enum.GetValues(typeof(StateType)))
             {
@@ -42,20 +46,40 @@ namespace EricGames.Core.StateMachine
         {
             triggerHandler.Tick(deltaTime);
 
-            if (stateMachineStart)
+            if (stateMachineStop) // Initialize
             {
-                subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.START);
-                stateChanged = stateMachineStart = false;
+                nextStateType = defaultState;
+
+                foreach (var transition in startTransitions)
+                {
+                    if (transition.CheckCondition(deltaTime))
+                    {
+                        nextStateType = transition.targetState;
+                        break;
+                    }
+                }
+
+                subStateMaps[nextStateType].InvokeTargetDelegate(StateDelegateType.START);
+                currStateType = nextStateType;
+                stateChanged = stateMachineStop = false;
             }
             else
             {
-                if (!stateChanged)
+                var currState = subStateMaps[currStateType];
+                if (!currState.Stay)
                 {
-                    foreach (var transition in subStateMaps[currState].transitions)
+                    foreach (var transition in currState.transitions)
                     {
                         if (transition.CheckCondition(deltaTime))
                         {
-                            nextState = transition.targetState;
+                            if (transition.exitTransition)
+                            {
+                                exit = true;
+                            }
+                            else
+                            {
+                                nextStateType = transition.targetState;
+                            }
                             stateChanged = true;
                             break;
                         }
@@ -64,17 +88,27 @@ namespace EricGames.Core.StateMachine
 
                 if (stateChanged)
                 {
-                    subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.END);
+                    currState.InvokeTargetDelegate(StateDelegateType.END);
 
-                    currState = nextState;
+                    if (exit)
+                    {
+                        stateMachineStop = true;
+                    }
+                    else
+                    {
+                        subStateMaps[nextStateType].InvokeTargetDelegate(StateDelegateType.START);
 
-                    subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.START);
+                        currStateType = nextStateType;
+                    }
 
                     stateChanged = false;
                 }
             }
 
-            subStateMaps[currState].InvokeTargetDelegate(StateDelegateType.UPDATE);
+            if (!stateMachineStop)
+            {
+                subStateMaps[currStateType].InvokeTargetDelegate(StateDelegateType.UPDATE);
+            }
         }
 
         public void SetTrigger(TriggerType triggerType, float time)

@@ -10,16 +10,16 @@ namespace EricGames.Core.Characters
         {
             var dodgeState = stateMachine.GetSubState(State.DODGE);
 
-            dodgeState.ReigsterStateDelegate(State.DODGE, StateDelegateType.START, DodgeStateStart);
-            dodgeState.ReigsterStateDelegate(State.DODGE, StateDelegateType.END, DodgeStateEnd);
+            dodgeState.ReigsterStateDelegate(StateDelegateType.START, DodgeStateStart);
+            dodgeState.ReigsterStateDelegate(StateDelegateType.END, DodgeStateEnd);
 
-            dodgeState.RegisterTransition(State.DODGE, State.MOVE, 0.0f,
+            dodgeState.RegisterTransition(State.MOVE, 0.0f,
                 null,
                 () => dodgeEnd && landingState == LandingState.GROUNDED);
-            dodgeState.RegisterTransition(State.DODGE, State.FALL, 0.0f,
+            dodgeState.RegisterTransition(State.FALL, 0.0f,
                 null,
                 () => dodgeEnd && landingState == LandingState.FALLING);
-            dodgeState.RegisterTransition(State.DODGE, State.JUMP, 0.0f,
+            dodgeState.RegisterTransition(State.JUMP, 0.0f,
                 null,
                 () => dodgeEnd && landingState == LandingState.JUMPING);
             // stateMachine.RegisterTransition(State.DODGE, State.JUMP, 0.0f,
