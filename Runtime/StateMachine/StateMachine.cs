@@ -21,7 +21,7 @@ namespace EricGames.Core.StateMachine
 
         private Dictionary<StateType, State<StateType>> subStateMaps
             = new Dictionary<StateType, State<StateType>>();
-
+ 
         public StateMachine(StateType defaultStateType)
         {
             this.defaultStateType = defaultStateType;

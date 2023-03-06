@@ -233,8 +233,6 @@ namespace EricGames.Core.Characters
 
         public Vector2 moveInput;
 
-        private bool canRotate = false;
-
         [SerializeField] private GameObject obstacle;
 
         public bool untouchable = false; // can't touch, will close body collider
