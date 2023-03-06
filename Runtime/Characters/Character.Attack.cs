@@ -1,6 +1,4 @@
 using EricGames.Core.StateMachine;
-using EricGames.Core.Utility;
-using UnityEngine;
 
 namespace EricGames.Core.Characters
 {
@@ -60,6 +58,7 @@ namespace EricGames.Core.Characters
             if (attackSubState == AttackState.RESTORING)
             {
                 attackSubState = AttackState.END;
+                triggerHandler.ResetTrigger(TriggerType.ATTACK);
             }
         }
 
@@ -78,10 +77,15 @@ namespace EricGames.Core.Characters
             if (attackSubState == AttackState.PREPARING)
             {
                 ApplyRotation();
+                HandlePreparing();
             }
-            else
+            else if (attackSubState == AttackState.ATTACKING)
             {
-                HandleAttack();
+                HandleAttacking();
+            }
+            else if (attackSubState == AttackState.RESTORING)
+            {
+                HandleRestoring();
             }
         }
 
@@ -89,7 +93,9 @@ namespace EricGames.Core.Characters
 
         #region Abastract Function
 
-        public abstract void HandleAttack();
+        public abstract void HandlePreparing();
+        public abstract void HandleAttacking();
+        public abstract void HandleRestoring();
 
         #endregion
     }
