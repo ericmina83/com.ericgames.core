@@ -13,9 +13,11 @@ namespace EricGames.Core.Characters
             blockState.ReigsterStateDelegate(StateDelegateType.UPDATE, BlockStateUpdate);
             blockState.ReigsterStateDelegate(StateDelegateType.END, BlockStateEnd);
 
-            blockState.RegisterTransition(State.MOVE, 0.0f,
-                null,
+            blockState.RegisterTransition(State.MOVEMENT, 0.2f,
                 () => !blocking);
+
+            blockState.RegisterTransition(State.MOVEMENT, 0.2f,
+                () => landingState != LandingState.GROUNDED);
         }
 
         #region Trigger Function

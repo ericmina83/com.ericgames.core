@@ -20,11 +20,9 @@ namespace EricGames.Core.Characters
         public enum State
         {
             NONE,
-            MOVE,
+            MOVEMENT,
             ATTACK,
             HITTED,
-            JUMP,
-            FALL,
             DODGE,
             BLOCK,
         }
@@ -89,7 +87,7 @@ namespace EricGames.Core.Characters
         protected AnimatorTriggerHandler animatorTriggerHandler;
         protected Animator animator;
 
-        private StateMachine<State, TriggerType> stateMachine;
+        private StateMachine<State> stateMachine;
 
         [SerializeField]
         protected float moveSpeed = 1.0f;
@@ -113,6 +111,7 @@ namespace EricGames.Core.Characters
 
         // private float speedX => Mathf.Abs(moveInput.x);
         abstract protected float speedY { get; }
+        TriggerHandler<TriggerType> triggerHandler = new TriggerHandler<TriggerType>();
 
         protected virtual void Awake()
         {
@@ -139,11 +138,9 @@ namespace EricGames.Core.Characters
         {
             damage = new Damage(this);
 
-            stateMachine = new StateMachine<State, TriggerType>(State.MOVE);
+            stateMachine = new StateMachine<State>(State.MOVEMENT);
 
-            InitStateMove();
-            InitStateJump();
-            InitStateFall();
+            InitStateMovement();
             InitStateAttack();
             InitStateBlock();
             InitStateDodge();
@@ -168,13 +165,16 @@ namespace EricGames.Core.Characters
             animator.SetFloat("InputY", moveInput.y, 0.02f, Time.deltaTime); // curent vertical speed
 
             animator.SetFloat("SpeedY", speedY);
+            animator.SetBool(blockParameterHash, blocking);
         }
 
         void Update()
         {
             OnUpdate();
 
-            stateMachine?.Tick(Time.deltaTime);
+            var deltaTime = Time.deltaTime;
+            triggerHandler?.Tick(deltaTime);
+            stateMachine?.Tick(deltaTime);
         }
 
         protected abstract void OnUpdate();

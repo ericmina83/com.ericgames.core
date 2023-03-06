@@ -7,22 +7,15 @@ namespace EricGames.Core.Characters
     {
         private void InitStateFall()
         {
-            var fallState = stateMachine.GetSubState(State.FALL);
+            var fallState = movementStateMachine.GetSubState(MovementState.FALL);
 
             fallState.ReigsterStateDelegate(StateDelegateType.UPDATE, FallStateUpdate);
 
-            fallState.RegisterTransition(State.MOVE, 0.0f,
-                null,
+            fallState.RegisterTransition(MovementState.MOVE, 0.0f,
                 () => landingState == LandingState.GROUNDED);
-            fallState.RegisterTransition(State.DODGE, 0.0f,
-                new TriggerType[] { TriggerType.DODGE },
-                null);
-            fallState.RegisterTransition(State.ATTACK, 0.0f,
-                new TriggerType[] { TriggerType.ATTACK },
-                null);
-            fallState.RegisterTransition(State.JUMP, 0.0f,
-                new TriggerType[] { TriggerType.JUMP },
-                () => landingState == LandingState.GROUNDED ? true : doubleJump);
+            fallState.RegisterTransition(MovementState.JUMP, 0.0f,
+                () => landingState == LandingState.GROUNDED ? true : doubleJump
+                    && triggerHandler.GetTriggerValue(TriggerType.JUMP));
         }
 
         #region State Delegate

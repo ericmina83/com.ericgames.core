@@ -23,25 +23,16 @@ namespace EricGames.Core.Characters
             attackState.ReigsterStateDelegate(StateDelegateType.UPDATE, AttackStateUpdate);
 
             attackState.RegisterTransition(State.ATTACK, 0f,
-                new TriggerType[] { TriggerType.ATTACK },
-                () => canDoNext);
-            attackState.RegisterTransition(State.MOVE, 0.0f,
-                null,
-                () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.GROUNDED);
-            attackState.RegisterTransition(State.FALL, 0.0f,
-                null,
-                () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.FALLING);
-            attackState.RegisterTransition(State.JUMP, 0.0f,
-                null,
-                () => animator.CheckCurrentStateIs(0, moveStateTagHash) && landingState == LandingState.JUMPING);
+                () => canDoNext && triggerHandler.GetTriggerValue(TriggerType.ATTACK));
+            attackState.RegisterTransition(State.MOVEMENT, 0f,
+                () => !animator.CheckCurrentStateIs(0, attackStateTagHash));
         }
 
         #region Trigger Function
 
         public void Attack()
         {
-            stateMachine.SetTrigger(TriggerType.ATTACK, 0.4f);
-            animatorTriggerHandler.SetTrigger(attackParameterHash, 0.4f);
+            triggerHandler.SetTrigger(TriggerType.ATTACK, 0.4f);
         }
 
         #endregion
@@ -72,6 +63,9 @@ namespace EricGames.Core.Characters
         {
             canDoNext = false;
             preAttack = false;
+
+            triggerHandler.ResetTrigger(TriggerType.ATTACK);
+            animatorTriggerHandler.SetTrigger(attackParameterHash, 0.4f);
         }
 
         public void AttackStateUpdate()

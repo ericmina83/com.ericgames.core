@@ -7,21 +7,13 @@ namespace EricGames.Core.Characters
     {
         private void InitStateMove()
         {
-            var moveState = stateMachine.GetSubState(State.MOVE);
+            var moveState = movementStateMachine.GetSubState(MovementState.MOVE);
 
             moveState.ReigsterStateDelegate(StateDelegateType.UPDATE, MoveStateUpdate);
 
-            moveState.RegisterTransition(State.DODGE, 0.2f,
-                new TriggerType[] { TriggerType.DODGE },
-                null);
-            moveState.RegisterTransition(State.ATTACK, 0.2f,
-                new TriggerType[] { TriggerType.ATTACK },
-                null);
-            moveState.RegisterTransition(State.JUMP, 0.4f,
-                new TriggerType[] { TriggerType.JUMP },
-                null);
-            moveState.RegisterTransition(State.FALL, 0.0f,
-                null,
+            moveState.RegisterTransition(MovementState.JUMP, 0.4f,
+                () => triggerHandler.GetTriggerValue(TriggerType.JUMP));
+            moveState.RegisterTransition(MovementState.FALL, 0.0f,
                 () => landingState == LandingState.GROUNDED && 0 < speedY);
         }
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using EricGames.Core.Components;
 
 namespace EricGames.Core.StateMachine
 {
@@ -11,21 +10,13 @@ namespace EricGames.Core.StateMachine
         END
     }
 
-    public class SubState<StateType, TriggerType>
+    public class State<StateType>
         where StateType : Enum
-        where TriggerType : Enum
     {
         public delegate void StateDelegate();
 
-        internal StateMachine<StateType, TriggerType> stateMachine;
         public Dictionary<StateDelegateType, StateDelegate> stateDelegates = new Dictionary<StateDelegateType, StateDelegate>();
-        public List<Transition<StateType, TriggerType>> transitions = new List<Transition<StateType, TriggerType>>();
-        virtual internal bool Stay => false;
-
-        public SubState(StateMachine<StateType, TriggerType> stateMachine)
-        {
-            this.stateMachine = stateMachine;
-        }
+        public List<Transition<StateType>> transitions = new List<Transition<StateType>>();
 
         public void InvokeTargetDelegate(StateDelegateType stateDelegateType)
         {
@@ -38,29 +29,16 @@ namespace EricGames.Core.StateMachine
         virtual public void RegisterTransition(
             StateType targetState,
             float exitTime,
-            TriggerType[] triggerTypes,
             ConditionDelegate conditionDelegate)
         {
-            transitions
-                .Add(new Transition<StateType, TriggerType>(
-                    targetState,
-                    conditionDelegate,
-                    exitTime,
-                    triggerTypes,
-                    stateMachine));
+            transitions.Add(new Transition<StateType>(targetState, exitTime, conditionDelegate));
         }
 
         virtual public void RegisterExitTransition(
             float exitTime,
-            TriggerType[] triggerTypes,
             ConditionDelegate conditionDelegate)
         {
-            transitions
-                .Add(new Transition<StateType, TriggerType>(
-                    conditionDelegate,
-                    exitTime,
-                    triggerTypes,
-                    stateMachine));
+            transitions.Add(new Transition<StateType>(exitTime, conditionDelegate));
         }
 
         public virtual void ReigsterStateDelegate(

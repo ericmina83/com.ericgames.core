@@ -13,25 +13,15 @@ namespace EricGames.Core.Characters
             dodgeState.ReigsterStateDelegate(StateDelegateType.START, DodgeStateStart);
             dodgeState.ReigsterStateDelegate(StateDelegateType.END, DodgeStateEnd);
 
-            dodgeState.RegisterTransition(State.MOVE, 0.0f,
-                null,
-                () => dodgeEnd && landingState == LandingState.GROUNDED);
-            dodgeState.RegisterTransition(State.FALL, 0.0f,
-                null,
-                () => dodgeEnd && landingState == LandingState.FALLING);
-            dodgeState.RegisterTransition(State.JUMP, 0.0f,
-                null,
-                () => dodgeEnd && landingState == LandingState.JUMPING);
-            // stateMachine.RegisterTransition(State.DODGE, State.JUMP, 0.0f,
-            //     new TriggerType[] { TriggerType.JUMP },
-            //     () => dodgeEnd);
+            dodgeState.RegisterTransition(State.MOVEMENT, 0.0f,
+                () => dodgeEnd);
         }
 
         #region Trigger Function
 
         public void Dodge()
         {
-            stateMachine.SetTrigger(TriggerType.DODGE, 0.4f);
+            triggerHandler.SetTrigger(TriggerType.DODGE, 0.4f);
         }
 
         #endregion
@@ -44,6 +34,7 @@ namespace EricGames.Core.Characters
             untouchable = true;
             obstacle.SetActive(false);
 
+            triggerHandler.ResetTrigger(TriggerType.DODGE);
             animatorTriggerHandler.SetTrigger(dodgeParameterHash, 0.4f);
         }
 
