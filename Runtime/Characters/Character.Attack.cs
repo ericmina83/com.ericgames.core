@@ -1,4 +1,5 @@
 using EricGames.Core.StateMachine;
+using UnityEngine;
 
 namespace EricGames.Core.Characters
 {
@@ -9,10 +10,15 @@ namespace EricGames.Core.Characters
             WAIT,
             PREPARING,
             ATTACKING,
-            RESTORING,
-            END
+            RESETTING,
+            ENDING
         }
 
+        public delegate void AttackDelegate();
+
+        public event AttackDelegate OnPreparing;
+        public event AttackDelegate OnAttacking;
+        public event AttackDelegate OnResetting;
 
         private AttackState attackSubState = AttackState.PREPARING;
 
@@ -24,10 +30,10 @@ namespace EricGames.Core.Characters
             attackState.ReigsterStateDelegate(StateDelegateType.UPDATE, AttackStateUpdate);
 
             attackState.RegisterTransition(State.ATTACK, 0f,
-                () => attackSubState == AttackState.RESTORING
+                () => attackSubState == AttackState.RESETTING
                     && triggerHandler.GetTriggerValue(TriggerType.ATTACK));
             attackState.RegisterTransition(State.MOVEMENT, 0f,
-                () => attackSubState == AttackState.END);
+                () => attackSubState == AttackState.ENDING);
         }
 
         #region Trigger Function
@@ -39,26 +45,26 @@ namespace EricGames.Core.Characters
 
         #endregion
 
-        public void AttackPrepare()
+        public void OnPreparingAnimationEvent()
         {
             attackSubState = AttackState.PREPARING;
         }
 
-        public void AttackStart()
+        public void OnAttackingAnimationEvent()
         {
             attackSubState = AttackState.ATTACKING;
         }
 
-        public void AttackRestore()
+        public void OnResettingAnimationEvent()
         {
-            attackSubState = AttackState.RESTORING;
+            attackSubState = AttackState.RESETTING;
         }
 
-        public void AttackEnd()
+        public void OnEndingAnimationEvent()
         {
-            if (attackSubState == AttackState.RESTORING)
+            if (attackSubState == AttackState.RESETTING)
             {
-                attackSubState = AttackState.END;
+                attackSubState = AttackState.ENDING;
                 triggerHandler.ResetTrigger(TriggerType.ATTACK);
             }
         }
@@ -67,6 +73,7 @@ namespace EricGames.Core.Characters
 
         private void AttackStateStart()
         {
+            Debug.Log("AttackStateStart");
             attackSubState = AttackState.WAIT;
 
             triggerHandler.ResetTrigger(TriggerType.ATTACK);
@@ -79,14 +86,17 @@ namespace EricGames.Core.Characters
             {
                 ApplyRotation();
                 HandlePreparing();
+                OnPreparing?.Invoke();
             }
             else if (attackSubState == AttackState.ATTACKING)
             {
                 HandleAttacking();
+                OnAttacking?.Invoke();
             }
-            else if (attackSubState == AttackState.RESTORING)
+            else if (attackSubState == AttackState.RESETTING)
             {
-                HandleRestoring();
+                HandleResetting();
+                OnResetting?.Invoke();
             }
         }
 
@@ -94,9 +104,11 @@ namespace EricGames.Core.Characters
 
         #region Abastract Function
 
-        public abstract void HandlePreparing();
-        public abstract void HandleAttacking();
-        public abstract void HandleRestoring();
+        protected abstract void HandlePreparing();
+
+        protected abstract void HandleAttacking();
+
+        protected abstract void HandleResetting();
 
         #endregion
     }

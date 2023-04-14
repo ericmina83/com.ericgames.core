@@ -6,7 +6,10 @@ namespace EricGames.Core.Characters
     public partial class Character
     {
         protected bool doubleJump = true;
-        private bool applyJumpForce = false;
+
+        public delegate void JumpDelegate();
+
+        public event JumpDelegate OnJump;
 
         private void InitStateJump()
         {
@@ -16,8 +19,8 @@ namespace EricGames.Core.Characters
             jumpState.ReigsterStateDelegate(StateDelegateType.UPDATE, JumpStateUpdate);
 
             jumpState.RegisterTransition(MovementState.JUMP, 0.0f,
-                () => landingState == LandingState.GROUNDED ? true : doubleJump
-                    && triggerHandler.GetTriggerValue(TriggerType.JUMP));
+                () => triggerHandler.GetTriggerValue(TriggerType.JUMP)
+                    && (landingState == LandingState.GROUNDED ? true : doubleJump));
             jumpState.RegisterTransition(MovementState.FALL, 0.0f,
                 () => landingState != LandingState.GROUNDED && speedY < 0);
             jumpState.RegisterTransition(MovementState.MOVE, 0.0f,
@@ -29,7 +32,6 @@ namespace EricGames.Core.Characters
         virtual public void Jump()
         {
             triggerHandler.SetTrigger(TriggerType.JUMP, 0.4f);
-            applyJumpForce = true;
         }
 
         #endregion
@@ -44,17 +46,15 @@ namespace EricGames.Core.Characters
             }
             else
             {
-                doubleJump = !doubleJump;
+                doubleJump = false;
             }
 
-            if (applyJumpForce)
-            {
-                applyJumpForce = false;
-                HandleApplyJumpForce(jumpForce);
-            }
+            HandleApplyJumpForce(jumpForce);
 
             triggerHandler.ResetTrigger(TriggerType.JUMP);
-            animatorTriggerHandler.SetTrigger(jumpParameterHash, 0.1f);
+            animatorTriggerHandler.SetTrigger(jumpParameterHash, 0.4f);
+
+            OnJump?.Invoke();
         }
 
         private void JumpStateUpdate()

@@ -31,7 +31,11 @@ namespace EricGames.Core.Components
             {
                 if (state.value)
                 {
-                    state.counter -= deltaTime;
+                    if (state.counter > 0.0f)
+                    {
+                        state.counter -= deltaTime;
+                    }
+
                     if (state.counter <= 0.0f)
                     {
                         state.value = false;
@@ -42,21 +46,32 @@ namespace EricGames.Core.Components
 
         public void SetTrigger(TriggerType triggerType, float time)
         {
-            var state = triggerTypeStates[triggerType];
+            var state = GetState(triggerType);
             state.value = true;
             state.counter = time;
         }
 
         public void ResetTrigger(TriggerType triggerType)
         {
-            var state = triggerTypeStates[triggerType];
+            var state = GetState(triggerType);
             state.value = false;
-            state.counter = 0.0f;
+            state.counter = -0.1f;
+        }
+
+        private TriggerTypeState GetState(TriggerType triggerType)
+        {
+            if (!triggerTypeStates.TryGetValue(triggerType, out var state))
+            {
+                state = new TriggerTypeState();
+                triggerTypeStates.Add(triggerType, state);
+            }
+
+            return state;
         }
 
         public bool GetTriggerValue(TriggerType triggerType)
         {
-            return triggerTypeStates[triggerType].value;
+            return GetState(triggerType).value;
         }
     }
 }
