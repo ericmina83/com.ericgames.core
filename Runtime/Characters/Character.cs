@@ -113,7 +113,7 @@ namespace EricGames.Core.Characters
         abstract protected float speedY { get; }
         TriggerHandler<TriggerType> triggerHandler = new TriggerHandler<TriggerType>();
 
-        protected virtual void Awake()
+        private void Awake()
         {
             animatorTriggerHandler = GetComponent<AnimatorTriggerHandler>();
             animator = GetComponent<Animator>();
@@ -131,10 +131,13 @@ namespace EricGames.Core.Characters
             dodgeParameterHash = Animator.StringToHash(dodgeParameter);
             blockParameterHash = Animator.StringToHash(blockParameter);
             attackParameterHash = Animator.StringToHash(attackParameter);
+
+            OnAwake();
         }
 
+        protected abstract void OnAwake();
 
-        public virtual void Start()
+        private void Start()
         {
             damage = new Damage(this);
 
@@ -144,7 +147,11 @@ namespace EricGames.Core.Characters
             InitStateAttack();
             InitStateBlock();
             InitStateDodge();
+
+            OnStart();
         }
+
+        protected abstract void OnStart();
 
         void FixedUpdate()
         {
@@ -170,6 +177,9 @@ namespace EricGames.Core.Characters
 
         void Update()
         {
+            animator.SetBool("Is Grounded", landingState == LandingState.GROUNDED);
+            animator.SetBool("Unstopable", unstopable);
+
             OnUpdate();
 
             var deltaTime = Time.deltaTime;
