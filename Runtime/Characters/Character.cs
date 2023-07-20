@@ -171,13 +171,13 @@ namespace EricGames.Core.Characters
             animator.SetFloat("InputX", moveInput.x, 0.02f, Time.deltaTime); // now horizontal input value
             animator.SetFloat("InputY", moveInput.y, 0.02f, Time.deltaTime); // curent vertical speed
 
+            animator.SetBool("Is Grounded", landingState == LandingState.GROUNDED);
             animator.SetFloat("SpeedY", speedY);
             animator.SetBool(blockParameterHash, blocking);
         }
 
         void Update()
         {
-            animator.SetBool("Is Grounded", landingState == LandingState.GROUNDED);
             animator.SetBool("Unstopable", unstopable);
 
             OnUpdate();
