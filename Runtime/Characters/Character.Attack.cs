@@ -73,7 +73,6 @@ namespace EricGames.Core.Characters
 
         private void AttackStateStart()
         {
-            Debug.Log("AttackStateStart");
             attackSubState = AttackState.WAIT;
 
             triggerHandler.ResetTrigger(TriggerType.ATTACK);
