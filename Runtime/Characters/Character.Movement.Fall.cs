@@ -1,7 +1,7 @@
-using EricGames.Core.StateMachine;
+using EricGames.Runtime.StateMachine;
 using UnityEngine;
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
     public partial class Character
     {
@@ -9,13 +9,12 @@ namespace EricGames.Core.Characters
         {
             var fallState = movementStateMachine.GetSubState(MovementState.FALL);
 
-            fallState.ReigsterStateDelegate(StateDelegateType.UPDATE, FallStateUpdate);
+            fallState.RegisterStateDelegate(StateDelegateType.UPDATE, FallStateUpdate);
 
             fallState.RegisterTransition(MovementState.MOVE, 0.0f,
                 () => landingState == LandingState.GROUNDED);
             fallState.RegisterTransition(MovementState.JUMP, 0.0f,
-                () => landingState == LandingState.GROUNDED ? true : doubleJump
-                    && triggerHandler.GetTriggerValue(TriggerType.JUMP));
+                () => doubleJump && triggerHandler.GetTriggerValue(TriggerType.JUMP));
         }
 
         #region State Delegate

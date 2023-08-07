@@ -1,6 +1,6 @@
-using EricGames.Core.StateMachine;
+using EricGames.Runtime.StateMachine;
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
     public partial class Character
     {
@@ -10,8 +10,8 @@ namespace EricGames.Core.Characters
         {
             var dodgeState = stateMachine.GetSubState(State.DODGE);
 
-            dodgeState.ReigsterStateDelegate(StateDelegateType.START, DodgeStateStart);
-            dodgeState.ReigsterStateDelegate(StateDelegateType.END, DodgeStateEnd);
+            dodgeState.RegisterStateDelegate(StateDelegateType.START, DodgeStateStart);
+            dodgeState.RegisterStateDelegate(StateDelegateType.END, DodgeStateEnd);
 
             dodgeState.RegisterTransition(State.MOVEMENT, 0.0f,
                 () => dodgeEnd);

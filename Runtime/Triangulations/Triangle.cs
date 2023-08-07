@@ -1,4 +1,4 @@
-namespace EricGames.Core.Triangulations
+namespace EricGames.Runtime.Triangulations
 {
     internal class Triangle
     {

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace EricGames.Core.System
+namespace EricGames.Runtime.System
 {
     public interface IGameLoopSubscriber
     {

@@ -1,7 +1,7 @@
 using UnityEngine;
-using EricGames.Core.StateMachine;
+using EricGames.Runtime.StateMachine;
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
     public partial class Character
     {
@@ -15,15 +15,14 @@ namespace EricGames.Core.Characters
         {
             var jumpState = movementStateMachine.GetSubState(MovementState.JUMP);
 
-            jumpState.ReigsterStateDelegate(StateDelegateType.START, JumpStateStart);
-            jumpState.ReigsterStateDelegate(StateDelegateType.UPDATE, JumpStateUpdate);
+            jumpState.RegisterStateDelegate(StateDelegateType.START, JumpStateStart);
+            jumpState.RegisterStateDelegate(StateDelegateType.UPDATE, JumpStateUpdate);
 
-            jumpState.RegisterTransition(MovementState.JUMP, 0.0f,
-                () => triggerHandler.GetTriggerValue(TriggerType.JUMP)
-                    && (landingState == LandingState.GROUNDED ? true : doubleJump));
-            jumpState.RegisterTransition(MovementState.FALL, 0.0f,
-                () => landingState != LandingState.GROUNDED && speedY < 0);
-            jumpState.RegisterTransition(MovementState.MOVE, 0.0f,
+            jumpState.RegisterTransition(MovementState.JUMP, 0.25f,
+                () => triggerHandler.GetTriggerValue(TriggerType.JUMP) && doubleJump);
+            jumpState.RegisterTransition(MovementState.FALL, 0.25f,
+                () => landingState == LandingState.FALLING);
+            jumpState.RegisterTransition(MovementState.MOVE, 0.25f,
                 () => landingState == LandingState.GROUNDED);
         }
 
@@ -49,6 +48,7 @@ namespace EricGames.Core.Characters
                 doubleJump = false;
             }
 
+            landingState = LandingState.JUMPING;
             HandleApplyJumpForce(jumpForce);
 
             triggerHandler.ResetTrigger(TriggerType.JUMP);

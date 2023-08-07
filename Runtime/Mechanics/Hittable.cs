@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace EricGames.Core.Mechanics
+namespace EricGames.Runtime.Mechanics
 {
     [RequireComponent(typeof(Collider2D))]
     public class Hittable : MonoBehaviour

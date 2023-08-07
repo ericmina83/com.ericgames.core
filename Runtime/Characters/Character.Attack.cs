@@ -1,7 +1,7 @@
-using EricGames.Core.StateMachine;
+using EricGames.Runtime.StateMachine;
 using UnityEngine;
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
     public partial class Character
     {
@@ -26,8 +26,8 @@ namespace EricGames.Core.Characters
         {
             var attackState = stateMachine.GetSubState(State.ATTACK);
 
-            attackState.ReigsterStateDelegate(StateDelegateType.START, AttackStateStart);
-            attackState.ReigsterStateDelegate(StateDelegateType.UPDATE, AttackStateUpdate);
+            attackState.RegisterStateDelegate(StateDelegateType.START, AttackStateStart);
+            attackState.RegisterStateDelegate(StateDelegateType.UPDATE, AttackStateUpdate);
 
             attackState.RegisterTransition(State.ATTACK, 0f,
                 () => attackSubState == AttackState.RESETTING

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace EricGames.Core.StateMachine
+namespace EricGames.Runtime.StateMachine
 {
     public enum StateDelegateType
     {
@@ -15,14 +15,17 @@ namespace EricGames.Core.StateMachine
     {
         public delegate void StateDelegate();
 
-        public Dictionary<StateDelegateType, StateDelegate> stateDelegates = new Dictionary<StateDelegateType, StateDelegate>();
-        public List<Transition<StateType>> transitions = new List<Transition<StateType>>();
+        public readonly Dictionary<StateDelegateType, List<StateDelegate>> stateDelegates = new();
+        public readonly List<Transition<StateType>> transitions = new();
 
         public void InvokeTargetDelegate(StateDelegateType stateDelegateType)
         {
-            if (stateDelegates.TryGetValue(stateDelegateType, out var stateDelegate))
+            if (stateDelegates.TryGetValue(stateDelegateType, out var delegates))
             {
-                stateDelegate.Invoke();
+                foreach (var stateDelegate in delegates)
+                {
+                    stateDelegate.Invoke();
+                }
             }
         }
 
@@ -34,17 +37,15 @@ namespace EricGames.Core.StateMachine
             transitions.Add(new Transition<StateType>(targetState, exitTime, conditionDelegate));
         }
 
-        virtual public void RegisterExitTransition(
-            float exitTime,
-            ConditionDelegate conditionDelegate)
-        {
-            transitions.Add(new Transition<StateType>(exitTime, conditionDelegate));
-        }
-
-        public virtual void ReigsterStateDelegate(
+        public virtual void RegisterStateDelegate(
             StateDelegateType delegateType, StateDelegate stateDelegate)
         {
-            stateDelegates.Add(delegateType, stateDelegate);
+            if (!stateDelegates.TryGetValue(delegateType, out var delegates))
+            {
+                delegates = new();
+                stateDelegates.Add(delegateType, delegates);
+            }
+            delegates.Add(stateDelegate);
         }
     }
 }

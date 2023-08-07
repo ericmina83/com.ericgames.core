@@ -1,8 +1,8 @@
 using UnityEngine;
-using EricGames.Core.Mechanics;
-using EricGames.Core.Characters;
+using EricGames.Runtime.Mechanics;
+using EricGames.Runtime.Characters;
 
-namespace EricGames.Core.Equipment
+namespace EricGames.Runtime.Equipment
 {
     public class Weapon : MonoBehaviour
     {

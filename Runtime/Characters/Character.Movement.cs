@@ -1,7 +1,7 @@
 using UnityEngine;
-using EricGames.Core.StateMachine;
+using EricGames.Runtime.StateMachine;
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
     public partial class Character
     {
@@ -12,15 +12,21 @@ namespace EricGames.Core.Characters
             JUMP
         }
 
-        private StateMachine<MovementState> movementStateMachine;
+        [SerializeField] protected float moveSpeed = 1.0f;
+        [SerializeField] protected float jumpForce = 7.0f; // decide how height when jumping
+
+        protected float SpeedX => Mathf.Abs(moveInput.x);
+        abstract protected float SpeedY { get; }
+
+        private readonly StateMachine<MovementState> movementStateMachine = new(MovementState.MOVE);
 
         private void InitStateMovement()
         {
             // init state
             var movementState = stateMachine.GetSubState(State.MOVEMENT);
 
-            movementState.ReigsterStateDelegate(StateDelegateType.START, MovementStateStart);
-            movementState.ReigsterStateDelegate(StateDelegateType.UPDATE, MovementStateUpdate);
+            movementState.RegisterStateDelegate(StateDelegateType.START, MovementStateStart);
+            movementState.RegisterStateDelegate(StateDelegateType.UPDATE, MovementStateUpdate);
 
             movementState.RegisterTransition(State.DODGE, 0.2f,
                 () => triggerHandler.GetTriggerValue(TriggerType.DODGE));
@@ -30,19 +36,23 @@ namespace EricGames.Core.Characters
                 () => blocking);
 
             // init sub state machine
-            movementStateMachine = new StateMachine<MovementState>(MovementState.MOVE);
-
-            movementStateMachine.RegisterStartTransition(MovementState.MOVE,
-                () => landingState == LandingState.GROUNDED);
-            movementStateMachine.RegisterStartTransition(MovementState.FALL,
-                () => landingState == LandingState.FALLING);
-            movementStateMachine.RegisterStartTransition(MovementState.JUMP,
-                () => landingState == LandingState.JUMPING);
-
             InitStateMove();
             InitStateFall();
             InitStateJump();
         }
+
+        private void ApplyRotation()
+        {
+            var magnitude = moveInput.magnitude;
+
+            if (!Mathf.Approximately(magnitude, 0.0f))
+            {
+                transform.rotation = CheckRotation(transform.rotation, moveInput);
+            }
+        }
+
+        // check current rotation is same as input
+        public abstract Quaternion CheckRotation(Quaternion currentRotation, Vector2 input);
 
         #region State Delegate
 

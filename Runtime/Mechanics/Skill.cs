@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace EricGames.Core.Mechanics
+namespace EricGames.Runtime.Mechanics
 {
     [CreateAssetMenu(menuName = "My Assets/Skill")]
     public class Skill : ScriptableObject

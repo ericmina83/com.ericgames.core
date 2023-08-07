@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-namespace EricGames.Core.Mechanics
+namespace EricGames.Runtime.Mechanics
 {
     public class SkillEjector : MonoBehaviour
     {

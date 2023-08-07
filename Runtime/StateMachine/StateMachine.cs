@@ -1,27 +1,25 @@
 using System;
 using System.Collections.Generic;
-using EricGames.Core.Components;
 
-namespace EricGames.Core.StateMachine
+namespace EricGames.Runtime.StateMachine
 {
     public class StateMachine<StateType>
         where StateType : Enum
     {
-        private List<Transition<StateType>> startTransitions = new List<Transition<StateType>>();
-
-        private StateType defaultStateType;
+        private readonly StateType defaultStateType;
         private StateType currStateType;
         private StateType nextStateType;
 
         public StateType CurrState => currStateType;
         public StateType NextState => nextStateType;
 
-        internal bool stateMachineStop = false;
-        private bool exit = false;
+        private bool stateChanged = false;
 
-        private Dictionary<StateType, State<StateType>> subStateMaps
-            = new Dictionary<StateType, State<StateType>>();
- 
+        private readonly Dictionary<StateType, State<StateType>> subStateMaps
+            = new();
+
+        private float currentStateTime = 0;
+
         public StateMachine(StateType defaultStateType)
         {
             this.defaultStateType = defaultStateType;
@@ -41,80 +39,40 @@ namespace EricGames.Core.StateMachine
 
         public void Reset()
         {
-            stateMachineStop = true;
+            stateChanged = true;
+            nextStateType = defaultStateType;
         }
 
         public void Tick(float deltaTime)
         {
-            if (stateMachineStop) // Initialize
+            if (stateChanged) // Initialize
             {
-                nextStateType = defaultStateType;
-
-                foreach (var transition in startTransitions)
-                {
-                    if (transition.CheckCondition(deltaTime))
-                    {
-                        nextStateType = transition.targetState;
-                        break;
-                    }
-                }
-
                 subStateMaps[nextStateType].InvokeTargetDelegate(StateDelegateType.START);
                 currStateType = nextStateType;
-                stateMachineStop = false;
+                currentStateTime = 0.0f;
+                stateChanged = false;
             }
-            else
+
+            var currState = subStateMaps[currStateType];
+
+            currState.InvokeTargetDelegate(StateDelegateType.UPDATE);
+
+            foreach (var transition in currState.transitions)
             {
-                var currState = subStateMaps[currStateType];
-                var stateChanged = false;
-
-                foreach (var transition in currState.transitions)
+                if (transition.CheckCondition(currentStateTime))
                 {
-                    if (transition.CheckCondition(deltaTime))
-                    {
-                        if (transition.exitTransition)
-                        {
-                            exit = true;
-                        }
-                        else
-                        {
-                            nextStateType = transition.targetState;
-                        }
-                        stateChanged = true;
-                        break;
-                    }
-                }
-
-                if (stateChanged)
-                {
-                    currState.InvokeTargetDelegate(StateDelegateType.END);
-
-                    if (exit)
-                    {
-                        stateMachineStop = true;
-                        exit = false;
-                    }
-                    else
-                    {
-                        subStateMaps[nextStateType].InvokeTargetDelegate(StateDelegateType.START);
-                        currStateType = nextStateType;
-                    }
-
-                    stateChanged = false;
+                    nextStateType = transition.targetState;
+                    stateChanged = true;
+                    break;
                 }
             }
 
-            if (!stateMachineStop)
+            if (stateChanged)
             {
-                subStateMaps[currStateType].InvokeTargetDelegate(StateDelegateType.UPDATE);
+                currState.InvokeTargetDelegate(StateDelegateType.END);
             }
-        }
 
-        public void RegisterStartTransition(
-            StateType targetState,
-            ConditionDelegate conditionDelegate)
-        {
-            startTransitions.Add(new Transition<StateType>(targetState, 0.0f, conditionDelegate));
+            currentStateTime += deltaTime;
         }
     }
 }

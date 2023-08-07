@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System;
 
-namespace EricGames.Core.Components
+namespace EricGames.Runtime.Components
 {
     public class TriggerHandler<TriggerType> where TriggerType : Enum
     {
@@ -11,13 +11,11 @@ namespace EricGames.Core.Components
             public float counter = 0.0f;
         }
 
-        private Dictionary<TriggerType, TriggerTypeState> triggerTypeStates = new Dictionary<TriggerType, TriggerTypeState>();
-
-        private TriggerType[] triggerTypes;
+        private readonly Dictionary<TriggerType, TriggerTypeState> triggerTypeStates = new();
 
         public TriggerHandler()
         {
-            triggerTypes = (TriggerType[])Enum.GetValues(typeof(TriggerType));
+            var triggerTypes = (TriggerType[])Enum.GetValues(typeof(TriggerType));
 
             foreach (TriggerType triggerType in triggerTypes)
             {

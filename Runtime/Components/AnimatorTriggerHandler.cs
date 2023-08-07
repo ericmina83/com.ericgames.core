@@ -1,26 +1,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace EricGames.Core.Components
+namespace EricGames.Runtime.Components
 {
-    [RequireComponent(typeof(Animator))]
-    public class AnimatorTriggerHandler : MonoBehaviour
+    public class AnimatorTriggerHandler
     {
-        private Animator animator = null;
-        Dictionary<int, float> timers = new Dictionary<int, float>();
+        private readonly Dictionary<int, float> timers = new();
+        private readonly Animator animator;
 
-        private void Awake()
+        public AnimatorTriggerHandler(Animator animator)
         {
-            animator = GetComponent<Animator>();
+            this.animator = animator;
         }
 
-        private void Update()
+        public void Tick(float deltaTime)
         {
-            var keys = new List<int>(timers.Keys); // copy keys list becuase the dicionary will change later
+            var keys = new List<int>(timers.Keys);
+            // copy keys list because the dictionary will be changed later.
 
             foreach (var triggerId in keys)
             {
-                timers[triggerId] -= Time.deltaTime;
+                timers[triggerId] -= deltaTime;
                 if (timers[triggerId] < 0.0f)
                 {
                     animator.ResetTrigger(triggerId);

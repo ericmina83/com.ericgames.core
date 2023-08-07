@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace EricGames.Core.Utility
+namespace EricGames.Runtime.Utility
 {
     static public class AnimatorFunctions
     {

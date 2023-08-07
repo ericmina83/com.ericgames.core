@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
-using EricGames.Core.Components;
+using EricGames.Runtime.Components;
 
-namespace EricGames.Core.StateMachine
+namespace EricGames.Runtime.StateMachine
 {
     public delegate bool ConditionDelegate();
+
+    public delegate bool CallbackDelegate(bool pass);
 
     public class Transition<StateType>
     where StateType : Enum
@@ -13,27 +15,20 @@ namespace EricGames.Core.StateMachine
         public StateType targetState;
         internal ConditionDelegate conditionDelegate;
         private float exitTime;
-        public bool exitTransition = false;
 
         public Transition(
             StateType targetState,
             float exitTime,
             ConditionDelegate conditionDelegate)
         {
+            this.exitTime = exitTime;
             this.targetState = targetState;
             this.conditionDelegate = conditionDelegate;
         }
 
-        public Transition(float exitTime, ConditionDelegate conditionDelegate)
+        public bool CheckCondition(float currentStateTime)
         {
-            this.exitTransition = true;
-            this.conditionDelegate = conditionDelegate;
-        }
-
-        public bool CheckCondition(float deltaTime)
-        {
-            var timeout = exitTime <= 0;
-            exitTime -= deltaTime;
+            var timeout = currentStateTime > exitTime;
 
             if (!timeout)
                 return false;

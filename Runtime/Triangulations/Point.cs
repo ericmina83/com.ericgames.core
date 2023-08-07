@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace EricGames.Core.Triangulations
+namespace EricGames.Runtime.Triangulations
 {
     internal class Point
     {

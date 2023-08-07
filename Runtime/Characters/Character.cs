@@ -1,13 +1,11 @@
 using UnityEngine;
-using EricGames.Core.StateMachine;
-using EricGames.Core.Mechanics;
-using EricGames.Core.Components;
+using EricGames.Runtime.StateMachine;
+using EricGames.Runtime.Components;
 
 #nullable enable
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
-    [RequireComponent(typeof(AnimatorTriggerHandler))]
     [RequireComponent(typeof(Animator))]
     public abstract partial class Character : MonoBehaviour
     {
@@ -23,7 +21,7 @@ namespace EricGames.Core.Characters
             NONE,
             MOVEMENT,
             ATTACK,
-            HITTED,
+            HIT,
             DODGE,
             BLOCK,
         }
@@ -34,7 +32,6 @@ namespace EricGames.Core.Characters
             ENEMY,
         }
 
-        [SerializeField] private float jumpForce = 7.0f; // decide how height when jumping
         [SerializeField] private float blockingDuration = 0.2f;
 
         #region Animator Tag State
@@ -55,6 +52,7 @@ namespace EricGames.Core.Characters
         [SerializeField] private string blockParameter = "Block";
         [SerializeField] private string dodgeParameter = "Dodge";
         [SerializeField] private string attackParameter = "Attack";
+        [SerializeField] private string hitParameter = "Hit";
 
         #endregion
 
@@ -67,6 +65,7 @@ namespace EricGames.Core.Characters
         private int blockStateTagHash = 0;
         private int attackStateTagHash = 0;
 
+        private int hitParameterHash = 0;
         private int jumpParameterHash = 0;
         private int fallParameterHash = 0;
         private int dodgeParameterHash = 0;
@@ -76,13 +75,11 @@ namespace EricGames.Core.Characters
         private int hp;
         private int mp;
 
-        protected AnimatorTriggerHandler? animatorTriggerHandler;
-        protected Animator? animator;
+        protected Animator animator;
 
-        private StateMachine<State>? stateMachine;
-
-        [SerializeField]
-        protected float moveSpeed = 1.0f;
+        protected AnimatorTriggerHandler animatorTriggerHandler;
+        private readonly StateMachine<State> stateMachine = new(State.MOVEMENT);
+        private readonly TriggerHandler<TriggerType> triggerHandler = new();
 
         private float blockingTime = 0.0f;
 
@@ -90,27 +87,21 @@ namespace EricGames.Core.Characters
 
         protected enum LandingState
         {
+            NONE,
             GROUNDED,
             JUMPING,
             FALLING,
         }
 
-        protected LandingState landingState;
+        protected LandingState landingState = LandingState.NONE;
         public Team team;
-        public bool blocking = false;
         //public bool awaking = false;
-        public bool unstopable = false;
 
-        private Hittable? hittable;
-
-        // private float speedX => Mathf.Abs(moveInput.x);
-        abstract protected float speedY { get; }
-        TriggerHandler<TriggerType> triggerHandler = new TriggerHandler<TriggerType>();
 
         private void Awake()
         {
-            animatorTriggerHandler = GetComponent<AnimatorTriggerHandler>();
             animator = GetComponent<Animator>();
+            animatorTriggerHandler = new AnimatorTriggerHandler(animator);
 
             moveStateTagHash = Animator.StringToHash(moveStateTag);
             jumpStateTagHash = Animator.StringToHash(jumpStateTag);
@@ -119,6 +110,7 @@ namespace EricGames.Core.Characters
             blockStateTagHash = Animator.StringToHash(blockStateTag);
             attackStateTagHash = Animator.StringToHash(attackStateTag);
 
+            hitParameterHash = Animator.StringToHash(hitParameter);
             jumpParameterHash = Animator.StringToHash(jumpParameter);
             fallParameterHash = Animator.StringToHash(fallParameter);
             dodgeParameterHash = Animator.StringToHash(dodgeParameter);
@@ -132,8 +124,6 @@ namespace EricGames.Core.Characters
 
         private void Start()
         {
-            stateMachine = new StateMachine<State>(State.MOVEMENT);
-
             InitStateMovement();
             InitStateAttack();
             InitStateBlock();
@@ -144,77 +134,40 @@ namespace EricGames.Core.Characters
 
         protected abstract void OnStart();
 
-        void FixedUpdate()
+        private void Update()
         {
-            if (CheckIsGrounded())
-            {
-                landingState = LandingState.GROUNDED;
-            }
-            else if (speedY < 0)
-            {
-                landingState = LandingState.FALLING;
-            }
-            else
+            if (SpeedY > 0.1f)
             {
                 landingState = LandingState.JUMPING;
             }
+            else if (CheckIsGrounded())
+            {
+                landingState = LandingState.GROUNDED;
+            }
+            else
+            {
+                landingState = LandingState.FALLING;
+            }
 
-            animator?.SetFloat("InputX", moveInput.x, 0.02f, Time.deltaTime); // now horizontal input value
-            animator?.SetFloat("InputY", moveInput.y, 0.02f, Time.deltaTime); // curent vertical speed
+            animator.SetFloat("InputX", moveInput.x, 0.02f, Time.deltaTime); // now horizontal input value
+            animator.SetFloat("InputY", moveInput.y, 0.02f, Time.deltaTime); // current vertical speed
 
-            animator?.SetBool("Is Grounded", landingState == LandingState.GROUNDED);
-            animator?.SetFloat("SpeedY", speedY);
-            animator?.SetBool(blockParameterHash, blocking);
-        }
-
-        void Update()
-        {
-            animator?.SetBool("Unstopable", unstopable);
+            animator.SetBool("Is Grounded", landingState == LandingState.GROUNDED);
+            animator.SetFloat("SpeedY", SpeedY);
+            animator.SetBool(blockParameterHash, blocking);
 
             OnUpdate();
 
             var deltaTime = Time.deltaTime;
-            triggerHandler?.Tick(deltaTime);
-            stateMachine?.Tick(deltaTime);
+            triggerHandler.Tick(deltaTime);
+            stateMachine.Tick(deltaTime);
+            animatorTriggerHandler.Tick(deltaTime);
         }
 
         protected abstract void OnUpdate();
 
         protected abstract bool CheckIsGrounded();
 
-        #region State HITTED
-
-        public void HandleHitted()
-        {
-            if (blocking) // blocking
-            {
-                //triggerHandler.SetTrigger("Hitted when Blocking", 0.1f);
-
-                // if (Vector3.Dot(damage.attackFrom, transform.right) < 0.0f)
-
-                if (blockingTime < blockingDuration) // perfect blocking
-                {
-                    // damage.enable = false; // disable
-                }
-                else // normal blocking
-                {
-                    // todo 
-                }
-            }
-            else // non-blocking
-            {
-                //triggerHandler.SetTrigger("Hitted", 0.1f);
-
-                if (animator?.IsInTransition(0) ?? false) // in transition
-                {
-                }
-                else // in state
-                {
-                }
-            }
-        }
-
-        #endregion
 
         public Vector3 lookInput;
 
@@ -223,19 +176,5 @@ namespace EricGames.Core.Characters
         [SerializeField] private GameObject? obstacle;
 
         public bool untouchable = false; // can't touch, will close body collider
-
-
-        private void ApplyRotation()
-        {
-            var magnitude = moveInput.magnitude;
-
-            if (!Mathf.Approximately(magnitude, 0.0f))
-            {
-                transform.rotation = CheckRotation(moveInput);
-            }
-        }
-
-        // check current rotation is same as input
-        public abstract Quaternion CheckRotation(Vector2 input);
     }
 }

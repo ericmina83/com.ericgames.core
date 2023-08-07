@@ -1,22 +1,40 @@
 using UnityEngine;
-using EricGames.Core.StateMachine;
+using EricGames.Runtime.StateMachine;
 
-namespace EricGames.Core.Characters
+namespace EricGames.Runtime.Characters
 {
     public partial class Character
     {
+        public bool blocking = false;
+
+        public delegate void OnBlockDelegate();
+
+        private event OnBlockDelegate onBlockStartEvent;
+        public event OnBlockDelegate OnBlockStartEvent
+        {
+            add => onBlockStartEvent += value;
+            remove => onBlockStartEvent -= value;
+        }
+
+        private event OnBlockDelegate onBlockEndEvent;
+        public event OnBlockDelegate OnBlockEndEvent
+        {
+            add => onBlockEndEvent += value;
+            remove => onBlockEndEvent -= value;
+        }
+
         private void InitStateBlock()
         {
-            var blockState = stateMachine.GetSubState(State.BLOCK);
+            var hitState = stateMachine.GetSubState(State.BLOCK);
 
-            blockState.ReigsterStateDelegate(StateDelegateType.START, BlockStateStart);
-            blockState.ReigsterStateDelegate(StateDelegateType.UPDATE, BlockStateUpdate);
-            blockState.ReigsterStateDelegate(StateDelegateType.END, BlockStateEnd);
+            hitState.RegisterStateDelegate(StateDelegateType.START, BlockStateStart);
+            hitState.RegisterStateDelegate(StateDelegateType.UPDATE, BlockStateUpdate);
+            hitState.RegisterStateDelegate(StateDelegateType.END, BlockStateEnd);
 
-            blockState.RegisterTransition(State.MOVEMENT, 0.2f,
+            hitState.RegisterTransition(State.MOVEMENT, 0.2f,
                 () => !blocking);
 
-            blockState.RegisterTransition(State.MOVEMENT, 0.2f,
+            hitState.RegisterTransition(State.MOVEMENT, 0.2f,
                 () => landingState != LandingState.GROUNDED);
         }
 
@@ -35,6 +53,7 @@ namespace EricGames.Core.Characters
         {
             blockingTime = 0.0f;
             animator.SetBool(blockParameterHash, true);
+            onBlockStartEvent.Invoke();
         }
 
         private void BlockStateUpdate()
@@ -46,6 +65,7 @@ namespace EricGames.Core.Characters
         {
             blockingTime = 0.0f;
             animator.SetBool(blockParameterHash, false);
+            onBlockEndEvent.Invoke();
         }
 
         #endregion

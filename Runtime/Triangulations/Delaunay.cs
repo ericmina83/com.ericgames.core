@@ -2,13 +2,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-namespace EricGames.Core.Triangulations
+namespace EricGames.Runtime.Triangulations
 {
     public class Delaunay
     {
-        private List<Point> points = new List<Point>();
-        private List<Edge> edges = new List<Edge>();
-        private List<Triangle> triangles = new List<Triangle>();
+        private readonly List<Point> points = new();
+        private readonly List<Edge> edges = new();
+        private readonly List<Triangle> triangles = new();
 
         public static Mesh Triangulate(Vector2[] positions)
         {

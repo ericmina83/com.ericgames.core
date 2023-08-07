@@ -1,11 +1,12 @@
 {
-    "name": "EricGames.Core",
+    "name": "EricGames.Core.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:b8e24fd1eb19b4226afebb2810e3c19b",
-        "GUID:002c1bbed08fa44d282ef34fd5edb138"
+        "GUID:5ef74dcc86be3db43b6d49d0162e74cf"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
