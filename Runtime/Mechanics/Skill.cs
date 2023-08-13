@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 
@@ -11,6 +12,10 @@ namespace EricGames.Runtime.Mechanics
         public Vector2 HitBoxCenter => hitBoxCenter;
 
         [SerializeField]
+        private LayerMask targetLayer;
+        public LayerMask TargetLayer => targetLayer;
+
+        [SerializeField]
         private Vector2 hitBoxSize;
         public Vector2 HitBoxSize => hitBoxSize;
 
@@ -18,15 +23,23 @@ namespace EricGames.Runtime.Mechanics
         private float hitBoxAngle;
         public float HitBoxAngle => hitBoxAngle;
 
+        public SkillEjector source;
+
         [SerializeField]
-        private int frames;
-        public int Frames => frames;
+        private bool blockable = false;
 
-        public SkillEjector owner;
+        [NonSerialized]
+        private bool blocked = false;
+        public bool Blocked => blocked;
 
-        public bool enable; // damage effect or not
-        public int damageAmount;
+        public void SetBlocked()
+        {
+            blocked = blockable;
+        }
+
+        public int damage;
         public Vector3 attackFrom;
+        public bool enable = true; // damage effect or not
 
     }
 }

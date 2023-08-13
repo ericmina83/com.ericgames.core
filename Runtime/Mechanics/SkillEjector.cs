@@ -19,15 +19,18 @@ namespace EricGames.Runtime.Mechanics
                     new ContactFilter2D()
                     {
                         useLayerMask = true,
-                        layerMask = LayerMask.GetMask("Character"),
+                        layerMask = skill.TargetLayer,
                     },
                     results) > 0)
                 {
-                    var result = results.First();
-                    if (result.TryGetComponent<Hittable>(out var hittable))
+                    foreach (var hit in results)
                     {
-                        Debug.Log(hittable.name);
-                        hittable.ApplyEffect(skill);
+                        if (hit.TryGetComponent<Hittable>(out var hittable))
+                        {
+                            var cloneSkill = Instantiate(skill);
+                            cloneSkill.source = this;
+                            hittable.ApplyEffect(cloneSkill);
+                        }
                     }
                 }
             }

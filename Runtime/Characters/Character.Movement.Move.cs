@@ -1,5 +1,4 @@
 using UnityEngine;
-using EricGames.Runtime.StateMachine;
 
 namespace EricGames.Runtime.Characters
 {
@@ -9,7 +8,7 @@ namespace EricGames.Runtime.Characters
         {
             var moveState = movementStateMachine.GetSubState(MovementState.MOVE);
 
-            moveState.RegisterStateDelegate(StateDelegateType.UPDATE, MoveStateUpdate);
+            moveState.StateUpdateEvent += MoveStateUpdate;
 
             moveState.RegisterTransition(MovementState.JUMP, 0.0f,
                 () => landingState == LandingState.GROUNDED && triggerHandler.GetTriggerValue(TriggerType.JUMP));

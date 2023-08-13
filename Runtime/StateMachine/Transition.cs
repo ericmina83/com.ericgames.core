@@ -14,11 +14,11 @@ namespace EricGames.Runtime.StateMachine
 
         public StateType targetState;
         internal ConditionDelegate conditionDelegate;
-        private float exitTime;
+        private readonly float? exitTime = null;
 
         public Transition(
             StateType targetState,
-            float exitTime,
+            float? exitTime,
             ConditionDelegate conditionDelegate)
         {
             this.exitTime = exitTime;
@@ -26,9 +26,9 @@ namespace EricGames.Runtime.StateMachine
             this.conditionDelegate = conditionDelegate;
         }
 
-        public bool CheckCondition(float currentStateTime)
+        public bool CheckCondition(float currentStateTime = 0.0f)
         {
-            var timeout = currentStateTime > exitTime;
+            var timeout = (exitTime != null) ? currentStateTime > exitTime : true;
 
             if (!timeout)
                 return false;

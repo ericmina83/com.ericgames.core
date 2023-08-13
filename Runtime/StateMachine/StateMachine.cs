@@ -6,18 +6,20 @@ namespace EricGames.Runtime.StateMachine
     public class StateMachine<StateType>
         where StateType : Enum
     {
-        private readonly StateType defaultStateType;
         private StateType currStateType;
-        private StateType nextStateType;
-
         public StateType CurrState => currStateType;
+
+        private StateType nextStateType;
         public StateType NextState => nextStateType;
 
+        private readonly Dictionary<StateType, State<StateType>> subStateMaps = new();
+
+        private readonly List<Transition<StateType>> startTransitions = new();
+
+        private readonly StateType defaultStateType;
+
+        private bool initMachine = false;
         private bool stateChanged = false;
-
-        private readonly Dictionary<StateType, State<StateType>> subStateMaps
-            = new();
-
         private float currentStateTime = 0;
 
         public StateMachine(StateType defaultStateType)
@@ -32,22 +34,36 @@ namespace EricGames.Runtime.StateMachine
             Reset();
         }
 
-        public State<StateType> GetSubState(StateType stateType)
-        {
-            return subStateMaps[stateType];
-        }
+        public State<StateType> GetSubState(StateType stateType) => subStateMaps[stateType];
 
         public void Reset()
         {
             stateChanged = true;
+            initMachine = true;
             nextStateType = defaultStateType;
         }
 
+        virtual public void RegisterStartTransition(StateType targetState, float? exitTime, ConditionDelegate conditionDelegate)
+           => startTransitions.Add(new Transition<StateType>(targetState, exitTime, conditionDelegate));
+
         public void Tick(float deltaTime)
         {
+            if (initMachine)
+            {
+                foreach (var transition in startTransitions)
+                {
+                    if (transition.CheckCondition())
+                    {
+                        nextStateType = transition.targetState;
+                        break;
+                    }
+                }
+                initMachine = false;
+            }
+
             if (stateChanged) // Initialize
             {
-                subStateMaps[nextStateType].InvokeTargetDelegate(StateDelegateType.START);
+                subStateMaps[nextStateType].InvokeStateStartEvent();
                 currStateType = nextStateType;
                 currentStateTime = 0.0f;
                 stateChanged = false;
@@ -55,7 +71,7 @@ namespace EricGames.Runtime.StateMachine
 
             var currState = subStateMaps[currStateType];
 
-            currState.InvokeTargetDelegate(StateDelegateType.UPDATE);
+            currState.InvokeStateUpdateEvent();
 
             foreach (var transition in currState.transitions)
             {
@@ -69,7 +85,7 @@ namespace EricGames.Runtime.StateMachine
 
             if (stateChanged)
             {
-                currState.InvokeTargetDelegate(StateDelegateType.END);
+                currState.InvokeStateEndEvent();
             }
 
             currentStateTime += deltaTime;

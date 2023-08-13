@@ -26,13 +26,13 @@ namespace EricGames.Runtime.Characters
         {
             var attackState = stateMachine.GetSubState(State.ATTACK);
 
-            attackState.RegisterStateDelegate(StateDelegateType.START, AttackStateStart);
-            attackState.RegisterStateDelegate(StateDelegateType.UPDATE, AttackStateUpdate);
+            attackState.StateStartEvent += AttackStateStart;
+            attackState.StateUpdateEvent += AttackStateUpdate;
 
-            attackState.RegisterTransition(State.ATTACK, 0f,
+            attackState.RegisterTransition(State.ATTACK, null,
                 () => attackSubState == AttackState.RESETTING
                     && triggerHandler.GetTriggerValue(TriggerType.ATTACK));
-            attackState.RegisterTransition(State.MOVEMENT, 0f,
+            attackState.RegisterTransition(State.MOVEMENT, null,
                 () => attackSubState == AttackState.ENDING);
         }
 

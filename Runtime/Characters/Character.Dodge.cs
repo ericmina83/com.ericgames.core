@@ -10,8 +10,8 @@ namespace EricGames.Runtime.Characters
         {
             var dodgeState = stateMachine.GetSubState(State.DODGE);
 
-            dodgeState.RegisterStateDelegate(StateDelegateType.START, DodgeStateStart);
-            dodgeState.RegisterStateDelegate(StateDelegateType.END, DodgeStateEnd);
+            dodgeState.StateStartEvent += DodgeStateStart;
+            dodgeState.StateEndEvent += DodgeStateEnd;
 
             dodgeState.RegisterTransition(State.MOVEMENT, 0.0f,
                 () => dodgeEnd);

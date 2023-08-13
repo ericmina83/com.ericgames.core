@@ -27,9 +27,9 @@ namespace EricGames.Runtime.Characters
         {
             var hitState = stateMachine.GetSubState(State.BLOCK);
 
-            hitState.RegisterStateDelegate(StateDelegateType.START, BlockStateStart);
-            hitState.RegisterStateDelegate(StateDelegateType.UPDATE, BlockStateUpdate);
-            hitState.RegisterStateDelegate(StateDelegateType.END, BlockStateEnd);
+            hitState.StateStartEvent += BlockStateStart;
+            hitState.StateUpdateEvent += BlockStateUpdate;
+            hitState.StateEndEvent += BlockStateEnd;
 
             hitState.RegisterTransition(State.MOVEMENT, 0.2f,
                 () => !blocking);

@@ -3,49 +3,42 @@ using System.Collections.Generic;
 
 namespace EricGames.Runtime.StateMachine
 {
-    public enum StateDelegateType
-    {
-        START,
-        UPDATE,
-        END
-    }
-
     public class State<StateType>
         where StateType : Enum
     {
-        public delegate void StateDelegate();
+        private event Action stateStartEvent;
+        public event Action StateStartEvent
+        {
+            remove => stateStartEvent -= value;
+            add => stateStartEvent += value;
+        }
 
-        public readonly Dictionary<StateDelegateType, List<StateDelegate>> stateDelegates = new();
+        private event Action stateUpdateEvent;
+        public event Action StateUpdateEvent
+        {
+            remove => stateUpdateEvent -= value;
+            add => stateUpdateEvent += value;
+        }
+
+        private event Action stateEndEvent;
+        public event Action StateEndEvent
+        {
+            remove => stateEndEvent -= value;
+            add => stateEndEvent += value;
+        }
+
         public readonly List<Transition<StateType>> transitions = new();
 
-        public void InvokeTargetDelegate(StateDelegateType stateDelegateType)
-        {
-            if (stateDelegates.TryGetValue(stateDelegateType, out var delegates))
-            {
-                foreach (var stateDelegate in delegates)
-                {
-                    stateDelegate.Invoke();
-                }
-            }
-        }
+        public void InvokeStateStartEvent() => stateStartEvent?.Invoke();
+        public void InvokeStateUpdateEvent() => stateUpdateEvent?.Invoke();
+        public void InvokeStateEndEvent() => stateEndEvent?.Invoke();
 
         virtual public void RegisterTransition(
             StateType targetState,
-            float exitTime,
+            float? exitTime,
             ConditionDelegate conditionDelegate)
         {
             transitions.Add(new Transition<StateType>(targetState, exitTime, conditionDelegate));
-        }
-
-        public virtual void RegisterStateDelegate(
-            StateDelegateType delegateType, StateDelegate stateDelegate)
-        {
-            if (!stateDelegates.TryGetValue(delegateType, out var delegates))
-            {
-                delegates = new();
-                stateDelegates.Add(delegateType, delegates);
-            }
-            delegates.Add(stateDelegate);
         }
     }
 }

@@ -9,7 +9,7 @@ namespace EricGames.Runtime.Characters
         {
             var fallState = movementStateMachine.GetSubState(MovementState.FALL);
 
-            fallState.RegisterStateDelegate(StateDelegateType.UPDATE, FallStateUpdate);
+            fallState.StateUpdateEvent += FallStateUpdate;
 
             fallState.RegisterTransition(MovementState.MOVE, 0.0f,
                 () => landingState == LandingState.GROUNDED);

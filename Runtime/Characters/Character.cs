@@ -2,8 +2,6 @@ using UnityEngine;
 using EricGames.Runtime.StateMachine;
 using EricGames.Runtime.Components;
 
-#nullable enable
-
 namespace EricGames.Runtime.Characters
 {
     [RequireComponent(typeof(Animator))]
@@ -75,9 +73,8 @@ namespace EricGames.Runtime.Characters
         private int hp;
         private int mp;
 
-        protected Animator animator;
-
-        protected AnimatorTriggerHandler animatorTriggerHandler;
+        protected Animator animator = null;
+        private AnimatorTriggerHandler animatorTriggerHandler = null;
         private readonly StateMachine<State> stateMachine = new(State.MOVEMENT);
         private readonly TriggerHandler<TriggerType> triggerHandler = new();
 
@@ -161,7 +158,7 @@ namespace EricGames.Runtime.Characters
             var deltaTime = Time.deltaTime;
             triggerHandler.Tick(deltaTime);
             stateMachine.Tick(deltaTime);
-            animatorTriggerHandler.Tick(deltaTime);
+            animatorTriggerHandler?.Tick(deltaTime);
         }
 
         protected abstract void OnUpdate();
@@ -173,8 +170,9 @@ namespace EricGames.Runtime.Characters
 
         public Vector2 moveInput;
 
-        [SerializeField] private GameObject? obstacle;
+        [SerializeField] private GameObject obstacle = null;
 
         public bool untouchable = false; // can't touch, will close body collider
+
     }
 }

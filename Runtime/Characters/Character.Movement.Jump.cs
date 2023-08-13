@@ -15,8 +15,8 @@ namespace EricGames.Runtime.Characters
         {
             var jumpState = movementStateMachine.GetSubState(MovementState.JUMP);
 
-            jumpState.RegisterStateDelegate(StateDelegateType.START, JumpStateStart);
-            jumpState.RegisterStateDelegate(StateDelegateType.UPDATE, JumpStateUpdate);
+            jumpState.StateStartEvent += JumpStateStart;
+            jumpState.StateUpdateEvent += JumpStateUpdate;
 
             jumpState.RegisterTransition(MovementState.JUMP, 0.25f,
                 () => triggerHandler.GetTriggerValue(TriggerType.JUMP) && doubleJump);

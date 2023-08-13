@@ -1,43 +1,40 @@
 using System;
 using UnityEngine;
 
-
 namespace EricGames.Runtime.Mechanics
 {
     [RequireComponent(typeof(Collider2D))]
     public class Hittable : MonoBehaviour
     {
-        public delegate Skill HittablePreprocessorEvent(Skill damage);
-
-        [SerializeField]
-        private event HittablePreprocessorEvent preprocessorEvent;
-        public event HittablePreprocessorEvent PreprocessorEvent
+        protected bool untouchable = false;
+        public virtual bool Untouchable
         {
-            add { this.preprocessorEvent += value; }
-            remove { this.preprocessorEvent -= value; }
+            set => untouchable = value;
+            get => untouchable;
         }
 
-        private bool untouchable = false;
-        public bool Untouchable
+        [SerializeField]
+        protected SkillEjector source = null;
+        public virtual SkillEjector Source
         {
-            set { untouchable = value; }
-            get { return untouchable; }
+            get => source;
+            set => source = value;
         }
 
         [SerializeField]
         private event Action<Skill> hitEvent;
         public event Action<Skill> HitEvent
         {
-            add { this.hitEvent += value; }
-            remove { this.hitEvent -= value; }
+            add => hitEvent += value;
+            remove => hitEvent -= value;
         }
 
         public void ApplyEffect(Skill skill)
         {
-            if (hitEvent != null)
-            {
-                hitEvent.Invoke(skill);
-            }
+            if (untouchable) return;
+            if (skill.source == source) return;
+            Debug.Log(gameObject.name);
+            hitEvent?.Invoke(skill);
         }
     }
 }

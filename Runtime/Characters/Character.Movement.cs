@@ -9,7 +9,8 @@ namespace EricGames.Runtime.Characters
         {
             MOVE,
             FALL,
-            JUMP
+            JUMP,
+            END
         }
 
         [SerializeField] protected float moveSpeed = 1.0f;
@@ -25,15 +26,15 @@ namespace EricGames.Runtime.Characters
             // init state
             var movementState = stateMachine.GetSubState(State.MOVEMENT);
 
-            movementState.RegisterStateDelegate(StateDelegateType.START, MovementStateStart);
-            movementState.RegisterStateDelegate(StateDelegateType.UPDATE, MovementStateUpdate);
+            movementState.StateStartEvent += MovementStateStart;
+            movementState.StateUpdateEvent += MovementStateUpdate;
 
             movementState.RegisterTransition(State.DODGE, 0.2f,
                 () => triggerHandler.GetTriggerValue(TriggerType.DODGE));
             movementState.RegisterTransition(State.ATTACK, 0.2f,
                 () => triggerHandler.GetTriggerValue(TriggerType.ATTACK));
             movementState.RegisterTransition(State.BLOCK, 0.2f,
-                () => blocking);
+                () => blocking && movementStateMachine.CurrState == MovementState.MOVE);
 
             // init sub state machine
             InitStateMove();
